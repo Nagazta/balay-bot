@@ -3,9 +3,9 @@
 // Routes each user step to the right response
 // =============================================
 
-const { sendText, sendQuickReplies, sendCard } = require("../services/messenger");
-const { getSession, resetSession, setStep }    = require("../services/session");
-const { PRICES, PAYMENT }                      = require("../config/prices");
+const { sendText, sendQuickReplies, sendCard, sendImage } = require("../services/messenger");
+const { getSession, resetSession, setStep } = require("../services/session");
+const { PRICES, PAYMENT } = require("../config/prices");
 
 // ── Entry point for text messages ───────────────
 async function handleMessage(senderId, message) {
@@ -98,7 +98,7 @@ async function handlePostback(senderId, postback) {
     setStep(senderId, "humanHandoff");
     return sendText(
       senderId,
-      "👋 Sure! A member of our team will get back to you shortly. You can also reach us directly on our Facebook page. 😊"
+      "👋 Sure! A member of our team will get back to you shortly. You can also reach us from this number: 0915 687 7635 😊"
     );
   }
 
@@ -183,7 +183,7 @@ async function greet(senderId) {
     "🏠 Welcome to Balay Santa Fe — Bantayan Island!\n\nWould you like to chat with our bot or talk to a human agent?"
   );
   return sendQuickReplies(senderId, "Please choose:", [
-    { title: "🤖 Chat with Bot",  payload: "CHAT_BOT"   },
+    { title: "🤖 Chat with Bot", payload: "CHAT_BOT" },
     { title: "👤 Talk to Human", payload: "CHAT_HUMAN" },
   ]);
 }
@@ -191,9 +191,9 @@ async function greet(senderId) {
 async function showMenu(senderId) {
   setStep(senderId, "menu");
   return sendQuickReplies(senderId, "How can we help you today?", [
-    { title: "📅 Book Now",    payload: "BOOK_NOW"    },
+    { title: "📅 Book Now", payload: "BOOK_NOW" },
     { title: "💰 View Prices", payload: "VIEW_PRICES" },
-    { title: "❓ FAQ",         payload: "FAQ"         },
+    { title: "❓ FAQ", payload: "FAQ" },
   ]);
 }
 
@@ -203,11 +203,11 @@ async function showFaq(senderId) {
   setStep(senderId, "faq");
   await sendText(senderId, "❓ *Frequently Asked Questions*\n\nWhat would you like to know?");
   return sendQuickReplies(senderId, "Choose a topic:", [
-    { title: "📍 Location",          payload: "FAQ_LOCATION" },
-    { title: "🛏️ 1st Floor Photos",  payload: "FAQ_FLOOR1"   },
-    { title: "🛏️ 2nd Floor Photos",  payload: "FAQ_FLOOR2"   },
-    { title: "👤 Talk to Human",     payload: "FAQ_HUMAN"    },
-    { title: "⬅️ Main Menu",         payload: "CHAT_BOT"     },
+    { title: "📍 Location", payload: "FAQ_LOCATION" },
+    { title: "🛏️ 1st Floor Photos", payload: "FAQ_FLOOR1" },
+    { title: "🛏️ 2nd Floor Photos", payload: "FAQ_FLOOR2" },
+    { title: "👤 Talk to Human", payload: "FAQ_HUMAN" },
+    { title: "⬅️ Main Menu", payload: "CHAT_BOT" },
   ]);
 }
 
@@ -222,7 +222,7 @@ async function sendLocation(senderId) {
   return sendQuickReplies(senderId, "Anything else?", [
     { title: "🛏️ 1st Floor Photos", payload: "FAQ_FLOOR1" },
     { title: "🛏️ 2nd Floor Photos", payload: "FAQ_FLOOR2" },
-    { title: "⬅️ Back to FAQ",      payload: "FAQ"        },
+    { title: "⬅️ Back to FAQ", payload: "FAQ" },
   ]);
 }
 
@@ -246,8 +246,8 @@ async function sendFloor1Photos(senderId) {
   }
   return sendQuickReplies(senderId, "Anything else?", [
     { title: "🛏️ 2nd Floor Photos", payload: "FAQ_FLOOR2" },
-    { title: "📅 Book Now",         payload: "BOOK_NOW"   },
-    { title: "⬅️ Back to FAQ",      payload: "FAQ"        },
+    { title: "📅 Book Now", payload: "BOOK_NOW" },
+    { title: "⬅️ Back to FAQ", payload: "FAQ" },
   ]);
 }
 
@@ -266,8 +266,8 @@ async function sendFloor2Photos(senderId) {
   }
   return sendQuickReplies(senderId, "Anything else?", [
     { title: "🛏️ 1st Floor Photos", payload: "FAQ_FLOOR1" },
-    { title: "📅 Book Now",         payload: "BOOK_NOW"   },
-    { title: "⬅️ Back to FAQ",      payload: "FAQ"        },
+    { title: "📅 Book Now", payload: "BOOK_NOW" },
+    { title: "⬅️ Back to FAQ", payload: "FAQ" },
   ]);
 }
 
@@ -290,15 +290,15 @@ async function showPrices(senderId) {
 
   await sendText(senderId, msg);
   return sendQuickReplies(senderId, "What would you like to do?", [
-    { title: "📅 Book Now", payload: "BOOK_NOW"  },
-    { title: "⬅️ Main Menu", payload: "MENU"     },
+    { title: "📅 Book Now", payload: "BOOK_NOW" },
+    { title: "⬅️ Main Menu", payload: "MENU" },
   ]);
 }
 
 async function askAccommodation(senderId) {
   setStep(senderId, "ask_accommodation");
   return sendQuickReplies(senderId, "🛏️ Which accommodation would you like?", [
-    { title: "First Floor",  payload: "ACCOM_FIRST"  },
+    { title: "First Floor", payload: "ACCOM_FIRST" },
     { title: "Second Floor", payload: "ACCOM_SECOND" },
     { title: "No Room Needed", payload: "ACCOM_NONE" },
   ]);
@@ -310,8 +310,8 @@ async function askAccommodationType(senderId, accommodation) {
   }
   setStep(senderId, "ask_accom_type");
   return sendQuickReplies(senderId, "Which package type?", [
-    { title: "Regular",       payload: "TYPE_REGULAR" },
-    { title: "Upgrade",       payload: "TYPE_UPGRADE" },
+    { title: "Regular", payload: "TYPE_REGULAR" },
+    { title: "Upgrade", payload: "TYPE_UPGRADE" },
     { title: "Barkada Bundle", payload: "TYPE_BARKADA" },
   ]);
 }
@@ -319,11 +319,11 @@ async function askAccommodationType(senderId, accommodation) {
 async function askServices(senderId) {
   setStep(senderId, "ask_services");
   return sendQuickReplies(senderId, "🏝️ Add-on services (choose all that apply):", [
-    { title: "Island Hopping",     payload: "ADD_ISLAND"   },
-    { title: "Motorcycle Rental",  payload: "ADD_MOTO"     },
-    { title: "Land Tour",          payload: "ADD_LANDTOUR" },
-    { title: "Photos & Videos",    payload: "ADD_PHOTOS"   },
-    { title: "✅ Done",            payload: "SERVICES_DONE"},
+    { title: "Island Hopping", payload: "ADD_ISLAND" },
+    { title: "Motorcycle Rental", payload: "ADD_MOTO" },
+    { title: "Land Tour", payload: "ADD_LANDTOUR" },
+    { title: "Photos & Videos", payload: "ADD_PHOTOS" },
+    { title: "✅ Done", payload: "SERVICES_DONE" },
   ]);
 }
 
@@ -334,25 +334,25 @@ async function askMoreServices(senderId) {
     .filter(Boolean);
 
   const photosLabel = session.booking.photosVideos ? "\n📸 Photos & Videos" : "";
-  const summary     = selected.length
+  const summary = selected.length
     ? `\nSelected so far: ${selected.join(", ")}${photosLabel}`
     : "";
 
   return sendQuickReplies(senderId, `Anything else?${summary}`, [
-    { title: "Island Hopping",    payload: "ADD_ISLAND"   },
-    { title: "Motorcycle Rental", payload: "ADD_MOTO"     },
-    { title: "Land Tour",         payload: "ADD_LANDTOUR" },
-    { title: "Photos & Videos",   payload: "ADD_PHOTOS"   },
-    { title: "✅ Done",           payload: "SERVICES_DONE"},
+    { title: "Island Hopping", payload: "ADD_ISLAND" },
+    { title: "Motorcycle Rental", payload: "ADD_MOTO" },
+    { title: "Land Tour", payload: "ADD_LANDTOUR" },
+    { title: "Photos & Videos", payload: "ADD_PHOTOS" },
+    { title: "✅ Done", payload: "SERVICES_DONE" },
   ]);
 }
 
 async function askIslandHopping(senderId) {
   setStep(senderId, "ask_island");
   return sendQuickReplies(senderId, "🏝️ Which island hopping package?", [
-    { title: "1 Island  — ₱300",  payload: "IH_ONE"    },
-    { title: "2 Islands — ₱500",  payload: "IH_DOUBLE" },
-    { title: "3 Islands — ₱700",  payload: "IH_TRI"    },
+    { title: "1 Island  — ₱300", payload: "IH_ONE" },
+    { title: "2 Islands — ₱500", payload: "IH_DOUBLE" },
+    { title: "3 Islands — ₱700", payload: "IH_TRI" },
   ]);
 }
 
@@ -367,8 +367,8 @@ async function askMotorcycle(senderId) {
 async function askLandTour(senderId) {
   setStep(senderId, "ask_landtour");
   return sendQuickReplies(senderId, "🗺️ Which land tour package?", [
-    { title: "Santa Fe Only — ₱400",          payload: "LT_SANTAFE"  },
-    { title: "Santa Fe + Bantayan — ₱600",    payload: "LT_BANTAYAN" },
+    { title: "Santa Fe Only — ₱400", payload: "LT_SANTAFE" },
+    { title: "Santa Fe + Bantayan — ₱600", payload: "LT_BANTAYAN" },
   ]);
 }
 
@@ -400,18 +400,18 @@ async function handleName(senderId, name) {
 
 async function showSummary(senderId) {
   const session = getSession(senderId);
-  const b       = session.booking;
+  const b = session.booking;
 
   // ── Calculate total ──
   let total = 0;
 
-  const accomKey  = b.accommodation === "ACCOM_FIRST"  ? "firstFloor"
-                  : b.accommodation === "ACCOM_SECOND" ? "secondFloor"
-                  : null;
-  const typeKey   = b.accommodationType === "TYPE_REGULAR" ? "regular"
-                  : b.accommodationType === "TYPE_UPGRADE"  ? "upgrade"
-                  : b.accommodationType === "TYPE_BARKADA"  ? "barkada"
-                  : null;
+  const accomKey = b.accommodation === "ACCOM_FIRST" ? "firstFloor"
+    : b.accommodation === "ACCOM_SECOND" ? "secondFloor"
+      : null;
+  const typeKey = b.accommodationType === "TYPE_REGULAR" ? "regular"
+    : b.accommodationType === "TYPE_UPGRADE" ? "upgrade"
+      : b.accommodationType === "TYPE_BARKADA" ? "barkada"
+        : null;
 
   if (accomKey && typeKey) {
     total += PRICES[accomKey].options[typeKey].price;
@@ -438,7 +438,7 @@ async function showSummary(senderId) {
 
   b.total = total;
 
-  const accomLabel   = accomKey && typeKey
+  const accomLabel = accomKey && typeKey
     ? `${PRICES[accomKey].label} (${PRICES[accomKey].options[typeKey].label})`
     : "No accommodation";
   const servicesList = b.services.length ? b.services.join(", ") : "None";
@@ -456,8 +456,8 @@ async function showSummary(senderId) {
     "Confirm your booking?";
 
   return sendQuickReplies(senderId, summary, [
-    { title: "✅ Confirm",    payload: "CONFIRM_BOOKING" },
-    { title: "🔄 Start Over", payload: "RESTART"         },
+    { title: "✅ Confirm", payload: "CONFIRM_BOOKING" },
+    { title: "🔄 Start Over", payload: "RESTART" },
   ]);
 }
 
