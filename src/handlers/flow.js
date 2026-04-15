@@ -227,10 +227,13 @@ async function sendLocation(senderId) {
 }
 
 async function sendFloor1Photos(senderId) {
-  // TODO: Replace these URLs with your actual 1st floor photo URLs
   const photos = [
-    "https://via.placeholder.com/800x600?text=1st+Floor+Photo+1",
-    "https://via.placeholder.com/800x600?text=1st+Floor+Photo+2",
+    "https://i.imgur.com/qrD5MXX.jpg",
+    "https://i.imgur.com/EPOhCxh.jpg",
+    "https://i.imgur.com/5i6GjrW.jpg",
+    "https://i.imgur.com/C1WGVxf.jpg",
+    "https://i.imgur.com/7q6sFuc.jpg",
+    "https://i.imgur.com/8z6yr7P.jpg",
   ];
 
   await sendText(senderId, "🛏️ *First Floor — Balay Santa Fe*");
@@ -245,10 +248,11 @@ async function sendFloor1Photos(senderId) {
 }
 
 async function sendFloor2Photos(senderId) {
-  // TODO: Replace these URLs with your actual 2nd floor photo URLs
   const photos = [
-    "https://via.placeholder.com/800x600?text=2nd+Floor+Photo+1",
-    "https://via.placeholder.com/800x600?text=2nd+Floor+Photo+2",
+    "https://i.imgur.com/0xfU3WA.jpg",
+    "https://i.imgur.com/0q6KQgx.jpg",
+    "https://i.imgur.com/gv7IG4b.jpg",
+    "https://i.imgur.com/aOEEHtB.jpg",
   ];
 
   await sendText(senderId, "🛏️ *Second Floor — Balay Santa Fe*");
