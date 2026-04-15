@@ -77,12 +77,28 @@ async function handlePostback(senderId, postback) {
     return askAccommodation(senderId);
   }
 
-  if (payload === "INQUIRY") {
-    setStep(senderId, "humanHandoff");
+  if (payload === "FAQ") {
+    return showFaq(senderId);
+  }
+
+  if (payload === "FAQ_LOCATION") {
+    return sendLocation(senderId);
+  }
+
+  if (payload === "FAQ_FLOOR1") {
+    return sendFloor1Photos(senderId);
+  }
+
+  if (payload === "FAQ_FLOOR2") {
+    return sendFloor2Photos(senderId);
+  }
+
+  if (payload === "FAQ_HUMAN") {
     session.humanHandoff = true;
+    setStep(senderId, "humanHandoff");
     return sendText(
       senderId,
-      "Got it! 📩 Our team will be with you shortly. You can also message us directly on our Facebook page."
+      "👋 Sure! A member of our team will get back to you shortly. You can also reach us directly on our Facebook page. 😊"
     );
   }
 
@@ -175,9 +191,74 @@ async function greet(senderId) {
 async function showMenu(senderId) {
   setStep(senderId, "menu");
   return sendQuickReplies(senderId, "How can we help you today?", [
-    { title: "📅 Book Now",       payload: "BOOK_NOW"    },
-    { title: "💰 View Prices",    payload: "VIEW_PRICES" },
-    { title: "💬 Inquiry / Help", payload: "INQUIRY"     },
+    { title: "📅 Book Now",    payload: "BOOK_NOW"    },
+    { title: "💰 View Prices", payload: "VIEW_PRICES" },
+    { title: "❓ FAQ",         payload: "FAQ"         },
+  ]);
+}
+
+// ── FAQ ─────────────────────────────────────────
+
+async function showFaq(senderId) {
+  setStep(senderId, "faq");
+  await sendText(senderId, "❓ *Frequently Asked Questions*\n\nWhat would you like to know?");
+  return sendQuickReplies(senderId, "Choose a topic:", [
+    { title: "📍 Location",          payload: "FAQ_LOCATION" },
+    { title: "🛏️ 1st Floor Photos",  payload: "FAQ_FLOOR1"   },
+    { title: "🛏️ 2nd Floor Photos",  payload: "FAQ_FLOOR2"   },
+    { title: "👤 Talk to Human",     payload: "FAQ_HUMAN"    },
+    { title: "⬅️ Main Menu",         payload: "CHAT_BOT"     },
+  ]);
+}
+
+async function sendLocation(senderId) {
+  await sendText(
+    senderId,
+    "📍 *Balay Santa Fe Location*\n\n" +
+    "Balay Santa Fe is located in Santa Fe, Bantayan Island, Cebu, Philippines.\n\n" +
+    "🗺️ Google Maps:\n" +
+    "https://maps.google.com/?q=Santa+Fe+Bantayan+Island+Cebu+Philippines"
+  );
+  return sendQuickReplies(senderId, "Anything else?", [
+    { title: "🛏️ 1st Floor Photos", payload: "FAQ_FLOOR1" },
+    { title: "🛏️ 2nd Floor Photos", payload: "FAQ_FLOOR2" },
+    { title: "⬅️ Back to FAQ",      payload: "FAQ"        },
+  ]);
+}
+
+async function sendFloor1Photos(senderId) {
+  // TODO: Replace these URLs with your actual 1st floor photo URLs
+  const photos = [
+    "https://via.placeholder.com/800x600?text=1st+Floor+Photo+1",
+    "https://via.placeholder.com/800x600?text=1st+Floor+Photo+2",
+  ];
+
+  await sendText(senderId, "🛏️ *First Floor — Balay Santa Fe*");
+  for (const url of photos) {
+    await sendImage(senderId, url);
+  }
+  return sendQuickReplies(senderId, "Anything else?", [
+    { title: "🛏️ 2nd Floor Photos", payload: "FAQ_FLOOR2" },
+    { title: "📅 Book Now",         payload: "BOOK_NOW"   },
+    { title: "⬅️ Back to FAQ",      payload: "FAQ"        },
+  ]);
+}
+
+async function sendFloor2Photos(senderId) {
+  // TODO: Replace these URLs with your actual 2nd floor photo URLs
+  const photos = [
+    "https://via.placeholder.com/800x600?text=2nd+Floor+Photo+1",
+    "https://via.placeholder.com/800x600?text=2nd+Floor+Photo+2",
+  ];
+
+  await sendText(senderId, "🛏️ *Second Floor — Balay Santa Fe*");
+  for (const url of photos) {
+    await sendImage(senderId, url);
+  }
+  return sendQuickReplies(senderId, "Anything else?", [
+    { title: "🛏️ 1st Floor Photos", payload: "FAQ_FLOOR1" },
+    { title: "📅 Book Now",         payload: "BOOK_NOW"   },
+    { title: "⬅️ Back to FAQ",      payload: "FAQ"        },
   ]);
 }
 
