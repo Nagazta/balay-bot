@@ -227,13 +227,17 @@ async function sendLocation(senderId) {
 }
 
 async function sendFloor1Photos(senderId) {
+  const BASE = process.env.BASE_URL || "https://balay-bot.onrender.com";
   const photos = [
-    "https://i.imgur.com/qrD5MXX.jpg",
-    "https://i.imgur.com/EPOhCxh.jpg",
-    "https://i.imgur.com/5i6GjrW.jpg",
-    "https://i.imgur.com/C1WGVxf.jpg",
-    "https://i.imgur.com/7q6sFuc.jpg",
-    "https://i.imgur.com/8z6yr7P.jpg",
+    `${BASE}/images/1.jpg`,
+    `${BASE}/images/2.jpg`,
+    `${BASE}/images/3.jpg`,
+    `${BASE}/images/4.jpg`,
+    `${BASE}/images/5.jpg`,
+    `${BASE}/images/6.jpg`,
+    `${BASE}/images/7.jpg`,
+    `${BASE}/images/8.jpg`,
+    `${BASE}/images/9.jpg`,
   ];
 
   await sendText(senderId, "🛏️ *First Floor — Balay Santa Fe*");
@@ -248,11 +252,12 @@ async function sendFloor1Photos(senderId) {
 }
 
 async function sendFloor2Photos(senderId) {
+  const BASE = process.env.BASE_URL || "https://balay-bot.onrender.com";
   const photos = [
-    "https://i.imgur.com/0xfU3WA.jpg",
-    "https://i.imgur.com/0q6KQgx.jpg",
-    "https://i.imgur.com/gv7IG4b.jpg",
-    "https://i.imgur.com/aOEEHtB.jpg",
+    `${BASE}/images/2.1.jpg`,
+    `${BASE}/images/2.2.jpg`,
+    `${BASE}/images/2.3.jpg`,
+    `${BASE}/images/2.4.jpg`,
   ];
 
   await sendText(senderId, "🛏️ *Second Floor — Balay Santa Fe*");
