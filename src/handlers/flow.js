@@ -14,6 +14,11 @@ async function handleMessage(senderId, message) {
   // If a human agent has taken over, stop the bot
   if (session.humanHandoff) return;
 
+  // Quick reply buttons arrive as messages with a quick_reply payload — route them like postbacks
+  if (message.quick_reply?.payload) {
+    return handlePostback(senderId, { payload: message.quick_reply.payload });
+  }
+
   const text = (message.text ?? "").trim().toLowerCase();
 
   // Allow "restart" anywhere in the flow
