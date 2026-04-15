@@ -60,6 +60,19 @@ async function handlePostback(senderId, postback) {
     return greet(senderId);
   }
 
+  if (payload === "CHAT_BOT") {
+    return showMenu(senderId);
+  }
+
+  if (payload === "CHAT_HUMAN") {
+    session.humanHandoff = true;
+    setStep(senderId, "humanHandoff");
+    return sendText(
+      senderId,
+      "👋 Sure! A member of our team will be with you shortly.\n\nYou can also reach us directly on our Facebook page. We'll get back to you as soon as possible! 😊"
+    );
+  }
+
   if (payload === "BOOK_NOW") {
     return askAccommodation(senderId);
   }
@@ -148,14 +161,22 @@ async function handlePostback(senderId, postback) {
 // ── Helpers ─────────────────────────────────────
 
 async function greet(senderId) {
-  setStep(senderId, "menu");
+  setStep(senderId, "welcome");
   await sendText(
     senderId,
-    "🏠 Welcome to Balay Santa Fe — Bantayan Island!\n\nHow can we help you today?"
+    "🏠 Welcome to Balay Santa Fe — Bantayan Island!\n\nWould you like to chat with our bot or talk to a human agent?"
   );
-  return sendQuickReplies(senderId, "Choose an option:", [
-    { title: "📅 Book Now",      payload: "BOOK_NOW"     },
-    { title: "💰 View Prices",   payload: "VIEW_PRICES"  },
+  return sendQuickReplies(senderId, "Please choose:", [
+    { title: "🤖 Chat with Bot",  payload: "CHAT_BOT"   },
+    { title: "👤 Talk to Human", payload: "CHAT_HUMAN" },
+  ]);
+}
+
+async function showMenu(senderId) {
+  setStep(senderId, "menu");
+  return sendQuickReplies(senderId, "How can we help you today?", [
+    { title: "📅 Book Now",       payload: "BOOK_NOW"    },
+    { title: "💰 View Prices",    payload: "VIEW_PRICES" },
     { title: "💬 Inquiry / Help", payload: "INQUIRY"     },
   ]);
 }
