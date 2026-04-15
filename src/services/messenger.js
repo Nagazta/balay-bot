@@ -60,6 +60,7 @@ async function sendCard(recipientId, title, subtitle, buttons) {
 
 // Send an image
 async function sendImage(recipientId, imageUrl) {
+  console.log("📸 Sending image:", imageUrl);
   await callAPI({
     recipient: { id: recipientId },
     message: {
@@ -78,7 +79,8 @@ async function callAPI(body) {
       params: { access_token: PAGE_ACCESS_TOKEN },
     });
   } catch (err) {
-    console.error("❌ Messenger API Error:", err.response?.data || err.message);
+    const details = JSON.stringify(err.response?.data, null, 2) || err.message;
+    console.error("❌ Messenger API Error:\n", details);
   }
 }
 
