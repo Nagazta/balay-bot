@@ -31,8 +31,8 @@ const PRICES = {
   motorcycle: {
     label: "Motorcycle Rental",
     options: {
-      regular: { label: "Regular", price: 200 },
-      upgrade: { label: "Upgrade", price: 350 },
+      regular: { label: "Regular (Beatstreet / Mio i125s)", price: 300 },
+      upgrade: { label: "Upgrade (Click125 / Genio)",      price: 350 },
     }
   },
   landTour: {

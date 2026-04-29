@@ -260,7 +260,32 @@ async function sendFloor2Photos(senderId) {
     `${BASE}/images/2.4.jpg`,
   ];
 
-  await sendText(senderId, "🛏️ *Second Floor — Balay Santa Fe*");
+  await sendText(
+    senderId,
+    "🛏️ *Second Floor — Balay Santa Fe*\n\n" +
+    "📌 *3 Bedrooms*\n" +
+    "  • Room 1 — Queen-size bed\n" +
+    "  • Room 2 — Queen-size bed\n" +
+    "  • Room 3 — 2 Double-size beds, toilet & bath, and a balcony\n" +
+    "  • All rooms with split-type AC\n\n" +
+    "✅ Smart TV\n" +
+    "✅ Refrigerator\n" +
+    "✅ Induction Cooker\n" +
+    "✅ Rice Cooker\n" +
+    "✅ Water Heater\n" +
+    "✅ Shared Toilet\n" +
+    "✅ WiFi\n" +
+    "✅ Kitchen Utensils\n" +
+    "✅ Dining Area\n" +
+    "✅ Living Area\n" +
+    "✅ Potable Water\n" +
+    "✅ Kitchen Area\n\n" +
+    "📍 Location: Poblacion, Sta Fe\n" +
+    "📞 0926-262-9934\n" +
+    "📧 balaystafe@gmail.com\n\n" +
+    "⚠️ Rates may vary during peak or holiday seasons."
+  );
+
   for (const url of photos) {
     await sendImage(senderId, url);
   }
@@ -282,7 +307,8 @@ async function showPrices(senderId) {
     "🏝️ Island Hopping\n" +
     "  • 1 Island  — ₱300\n  • 2 Islands — ₱500\n  • 3 Islands — ₱700\n\n" +
     "🛵 Motorcycle Rental\n" +
-    "  • Regular — ₱200\n  • Upgrade  — ₱350\n\n" +
+    "  Upgrade:  Honda Click125 / Honda Genio — ₱350\n" +
+    "  Regular: Honda Beatstreet / Yamaha Mio i125s — ₱300\n\n" +
     "🗺️ Land Tour\n" +
     "  • Santa Fe Only         — ₱400\n  • Santa Fe + Bantayan — ₱600\n\n" +
     "📸 Photos & Videos — ₱200\n\n" +
@@ -358,9 +384,19 @@ async function askIslandHopping(senderId) {
 
 async function askMotorcycle(senderId) {
   setStep(senderId, "ask_moto");
-  return sendQuickReplies(senderId, "🛵 Which motorcycle package?", [
-    { title: "Regular — ₱200", payload: "MOTO_REGULAR" },
+  await sendText(
+    senderId,
+    "🛵 *Motorcycle Rental Rates*\n\n" +
+    "📌 *Upgrade — ₱350/day*\n" +
+    "  • Honda Click 125\n" +
+    "  • Honda Genio\n\n" +
+    "📌 *Regular — ₱300/day*\n" +
+    "  • Honda Beatstreet\n" +
+    "  • Yamaha Mio i125s"
+  );
+  return sendQuickReplies(senderId, "Which package?", [
     { title: "Upgrade — ₱350", payload: "MOTO_UPGRADE" },
+    { title: "Regular — ₱300", payload: "MOTO_REGULAR" },
   ]);
 }
 
