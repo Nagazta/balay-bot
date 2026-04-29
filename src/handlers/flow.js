@@ -3,7 +3,7 @@
 // Routes each user step to the right response
 // =============================================
 
-const { sendText, sendQuickReplies, sendCard, sendImage } = require("../services/messenger");
+const { sendText, sendQuickReplies, sendImage } = require("../services/messenger");
 const { getSession, resetSession, setStep } = require("../services/session");
 const { PRICES, PAYMENT } = require("../config/prices");
 
@@ -56,8 +56,12 @@ async function handlePostback(senderId, postback) {
   const payload = postback.payload ?? "";
 
   // ── Top-level menu ──────────────────────────
-  if (payload === "GET_STARTED" || payload === "MENU") {
+  if (payload === "GET_STARTED") {
     return greet(senderId);
+  }
+
+  if (payload === "MENU") {
+    return showMenu(senderId);
   }
 
   if (payload === "CHAT_BOT") {
@@ -207,7 +211,7 @@ async function showFaq(senderId) {
     { title: "🛏️ 1st Floor Photos", payload: "FAQ_FLOOR1" },
     { title: "🛏️ 2nd Floor Photos", payload: "FAQ_FLOOR2" },
     { title: "👤 Talk to Human", payload: "FAQ_HUMAN" },
-    { title: "⬅️ Main Menu", payload: "CHAT_BOT" },
+    { title: "⬅️ Main Menu", payload: "MENU" },
   ]);
 }
 
@@ -477,7 +481,10 @@ async function showSummary(senderId) {
   const accomLabel = accomKey && typeKey
     ? `${PRICES[accomKey].label} (${PRICES[accomKey].options[typeKey].label})`
     : "No accommodation";
-  const servicesList = b.services.length ? b.services.join(", ") : "None";
+  const labelMap = { islandHopping: "🏝️ Island Hopping", motorcycle: "🛵 Motorcycle Rental", landTour: "🗺️ Land Tour" };
+  const servicesList = b.services.length
+    ? b.services.map((s) => labelMap[s] ?? s).join(", ")
+    : "None";
 
   const summary =
     "📋 *BOOKING SUMMARY*\n\n" +
