@@ -5,9 +5,13 @@ const fs = require('fs');
 // Attempt to load credentials
 const credPath1 = path.join(__dirname, '../../balay-bot.json');
 const credPath2 = path.join(__dirname, '../../google-credentials.json');
+const credPath3 = path.join(__dirname, '../../balay-bot-f82f3d8db039.json');
+const credPath4 = '/etc/secrets/balay-bot.json'; // Render specific
 let credentialsPath = null;
 if (fs.existsSync(credPath1)) credentialsPath = credPath1;
 else if (fs.existsSync(credPath2)) credentialsPath = credPath2;
+else if (fs.existsSync(credPath3)) credentialsPath = credPath3;
+else if (fs.existsSync(credPath4)) credentialsPath = credPath4;
 
 let sheetsAPI = null;
 if (credentialsPath) {
