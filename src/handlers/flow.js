@@ -528,7 +528,7 @@ async function handleCheckOut(senderId, date) {
   // Calculate nights automatically
   const start = parseDate(session.booking.checkIn);
   const end = parseDate(session.booking.checkOut);
-  
+
   if (!start || !end || end <= start) {
     return sendText(senderId, "⚠️ Invalid dates. Please ensure your check-out date is after your check-in date.\n\n📅 What is your *check-in date* again?");
   }
@@ -536,14 +536,14 @@ async function handleCheckOut(senderId, date) {
   const diffTime = Math.abs(end - start);
   const diffNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   session.booking.nights = diffNights;
-  
-  const floorKey = session.booking.accommodation === "ACCOM_FIRST" ? "firstFloor" 
+
+  const floorKey = session.booking.accommodation === "ACCOM_FIRST" ? "firstFloor"
     : session.booking.accommodation === "ACCOM_SECOND" ? "secondFloor" : null;
 
   if (floorKey) {
     await sendText(senderId, `⏳ Checking availability for the ${floorKey === 'firstFloor' ? '1st' : '2nd'} Floor...`);
     const status = await checkAvailability(floorKey, session.booking.checkIn, session.booking.checkOut);
-    
+
     if (!status.available) {
       setStep(senderId, "ask_checkin");
       return sendText(senderId, status.reason + "\n\n📅 Please type a different *check-in date*:");
@@ -594,7 +594,7 @@ async function showSummary(senderId) {
     const nights = b.nights || 1;
     const pax = b.pax || 1;
     const minPax = pkg.minPax || 1;
-    
+
     if (typeKey === "barkada" || typeKey === "premiumBarkada") {
       const chargeablePax = Math.max(pax, minPax);
       total += pkg.price * chargeablePax * nights;
@@ -641,7 +641,7 @@ async function showSummary(senderId) {
         note += `*(Includes ${b.pax - pkg.minPax} extra pax at ₱${pkg.extraPaxRate}/night)*\n`;
       }
     } else if (b.pax < pkg.minPax) {
-       note += `*(Note: Minimum of ${pkg.minPax} pax applied for accommodation)*\n`;
+      note += `*(Note: Minimum of ${pkg.minPax} pax applied for accommodation)*\n`;
     }
   }
   if (b.services.includes("islandHopping")) {
@@ -652,13 +652,13 @@ async function showSummary(senderId) {
 
   const summary =
     "📋 *BOOKING SUMMARY*\n\n" +
-    `👤 Name:          ${b.name}\n` +
-    `📅 Check-in:      ${b.checkIn}\n` +
-    `📅 Check-out:     ${b.checkOut}\n` +
-    `🌙 Nights:        ${b.nights}\n` +
-    `👥 Guests (Pax):  ${b.pax}\n` +
+    `👤 Name: ${b.name}\n` +
+    `📅 Check-in: ${b.checkIn}\n` +
+    `📅 Check-out: ${b.checkOut}\n` +
+    `🌙 Nights: ${b.nights}\n` +
+    `👥 Guests (Pax): ${b.pax}\n` +
     `🛏️ Accommodation: ${accomLabel}\n` +
-    `🏝️ Services:      ${servicesList}\n\n` +
+    `🏝️ Services: ${servicesList}\n\n` +
     `💰 *Estimated Total: ₱${total.toLocaleString()}*\n` +
     note + "\n" +
     `GCash: ${PAYMENT.gcashNumber} (${PAYMENT.gcashName})\n\n` +
