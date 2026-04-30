@@ -6,7 +6,7 @@
 const { sendText, sendQuickReplies, sendImage, sendCarousel } = require("../services/messenger");
 const { getSession, resetSession, setStep, markHandoff, unmarkHandoff } = require("../services/session");
 const { PRICES, PAYMENT } = require("../config/prices");
-const { checkAvailability } = require("../services/calendar");
+const { checkAvailability, parseDate } = require("../services/calendar");
 
 // ── Entry point for text messages ───────────────
 async function handleMessage(senderId, message) {
@@ -63,9 +63,6 @@ async function handleMessage(senderId, message) {
 
     case "ask_checkout":
       return handleCheckOut(senderId, message.text?.trim());
-
-    case "ask_nights":
-      return handleNights(senderId, message.text?.trim());
 
     case "ask_pax":
       return handlePax(senderId, message.text?.trim());
@@ -527,6 +524,18 @@ async function handleCheckIn(senderId, date) {
 async function handleCheckOut(senderId, date) {
   const session = getSession(senderId);
   session.booking.checkOut = date;
+
+  // Calculate nights automatically
+  const start = parseDate(session.booking.checkIn);
+  const end = parseDate(session.booking.checkOut);
+  
+  if (!start || !end || end <= start) {
+    return sendText(senderId, "⚠️ Invalid dates. Please ensure your check-out date is after your check-in date.\n\n📅 What is your *check-in date* again?");
+  }
+
+  const diffTime = Math.abs(end - start);
+  const diffNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  session.booking.nights = diffNights;
   
   const floorKey = session.booking.accommodation === "ACCOM_FIRST" ? "firstFloor" 
     : session.booking.accommodation === "ACCOM_SECOND" ? "secondFloor" : null;
@@ -539,20 +548,9 @@ async function handleCheckOut(senderId, date) {
       setStep(senderId, "ask_checkin");
       return sendText(senderId, status.reason + "\n\n📅 Please type a different *check-in date*:");
     }
-    await sendText(senderId, "✅ Great news! Those dates are available.");
+    await sendText(senderId, `✅ Great! Availability confirmed for ${diffNights} night(s).`);
   }
 
-  setStep(senderId, "ask_nights");
-  return sendText(senderId, "🌙 How many nights will you be staying? (Please type a number, e.g., 2)");
-}
-
-async function handleNights(senderId, nightsText) {
-  const session = getSession(senderId);
-  const num = parseInt(nightsText, 10);
-  if (isNaN(num) || num <= 0) {
-    return sendText(senderId, "Please enter a valid number of nights (e.g., 2).");
-  }
-  session.booking.nights = num;
   setStep(senderId, "ask_pax");
   return sendText(senderId, "👥 How many guests (pax) will be staying? (Please type a number, e.g., 7)");
 }

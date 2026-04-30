@@ -153,4 +153,4 @@ async function checkAvailability(floorKey, checkInStr, checkOutStr) {
   }
 }
 
-module.exports = { checkAvailability };
+module.exports = { checkAvailability, parseDate };
