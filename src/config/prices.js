@@ -7,19 +7,19 @@ const PRICES = {
   firstFloor: {
     label: "First Floor",
     options: {
-      regular: { label: "Regular Rates", price: 4199 },
-      upgrade: { label: "Upgrade Package", price: 4599 },
-      barkada: { label: "Barkada Package", price: 999 },
-      premiumBarkada: { label: "Premium Barkada", price: 1299 },
+      regular: { label: "Regular Rates", price: 4199, minPax: 7, extraPaxRate: 499 },
+      upgrade: { label: "Upgrade Package", price: 4599, minPax: 7, extraPaxRate: 599 },
+      barkada: { label: "Barkada Package", price: 999, minPax: 7, extraPaxRate: 0 },
+      premiumBarkada: { label: "Premium Barkada", price: 1299, minPax: 7, extraPaxRate: 0 },
     }
   },
   secondFloor: {
     label: "Second Floor",
     options: {
-      regular: { label: "Regular Rates", price: 4599 },
-      upgrade: { label: "Upgrade Rates", price: 5299 },
-      barkada: { label: "Barkada Package", price: 999 },
-      premiumBarkada: { label: "Premium Barkada", price: 1299 },
+      regular: { label: "Regular Rates", price: 4599, minPax: 8, extraPaxRate: 499 },
+      upgrade: { label: "Upgrade Rates", price: 5299, minPax: 8, extraPaxRate: 599 },
+      barkada: { label: "Barkada Package", price: 999, minPax: 8, extraPaxRate: 0 },
+      premiumBarkada: { label: "Premium Barkada", price: 1299, minPax: 8, extraPaxRate: 0 },
     }
   },
   islandHopping: {

@@ -6,6 +6,7 @@
 const { sendText, sendQuickReplies, sendImage, sendCarousel } = require("../services/messenger");
 const { getSession, resetSession, setStep, markHandoff, unmarkHandoff } = require("../services/session");
 const { PRICES, PAYMENT } = require("../config/prices");
+const { checkAvailability } = require("../services/calendar");
 
 // ── Entry point for text messages ───────────────
 async function handleMessage(senderId, message) {
@@ -62,6 +63,12 @@ async function handleMessage(senderId, message) {
 
     case "ask_checkout":
       return handleCheckOut(senderId, message.text?.trim());
+
+    case "ask_nights":
+      return handleNights(senderId, message.text?.trim());
+
+    case "ask_pax":
+      return handlePax(senderId, message.text?.trim());
 
     case "ask_name":
       return handleName(senderId, message.text?.trim());
@@ -186,10 +193,7 @@ async function handlePostback(senderId, postback) {
     return askMoreServices(senderId);
   }
 
-  if (payload === "ADD_PHOTOS") {
-    session.booking.photosVideos = true;
-    return askMoreServices(senderId);
-  }
+
 
   if (payload === "SERVICES_DONE") {
     return askCheckIn(senderId);
@@ -345,7 +349,6 @@ async function showPrices(senderId) {
     "  Regular: Honda Beatstreet / Yamaha Mio i125s — ₱300\n\n" +
     "🗺️ Land Tour\n" +
     "  • Santa Fe Only         — ₱400\n  • Santa Fe + Bantayan — ₱600\n\n" +
-    "📸 Photos & Videos — ₱200\n\n" +
     "Ready to book?";
 
   await sendText(senderId, msg);
@@ -439,7 +442,6 @@ async function askServices(senderId) {
     { title: "Island Hopping", payload: "ADD_ISLAND" },
     { title: "Motorcycle Rental", payload: "ADD_MOTO" },
     { title: "Land Tour", payload: "ADD_LANDTOUR" },
-    { title: "Photos & Videos", payload: "ADD_PHOTOS" },
     { title: "✅ Done", payload: "SERVICES_DONE" },
   ]);
 }
@@ -450,16 +452,14 @@ async function askMoreServices(senderId) {
     .map((s) => ({ islandHopping: "🏝️ Island Hopping", motorcycle: "🛵 Motorcycle", landTour: "🗺️ Land Tour" }[s]))
     .filter(Boolean);
 
-  const photosLabel = session.booking.photosVideos ? "\n📸 Photos & Videos" : "";
   const summary = selected.length
-    ? `\nSelected so far: ${selected.join(", ")}${photosLabel}`
+    ? `\nSelected so far: ${selected.join(", ")}`
     : "";
 
   return sendQuickReplies(senderId, `Anything else?${summary}`, [
     { title: "Island Hopping", payload: "ADD_ISLAND" },
     { title: "Motorcycle Rental", payload: "ADD_MOTO" },
     { title: "Land Tour", payload: "ADD_LANDTOUR" },
-    { title: "Photos & Videos", payload: "ADD_PHOTOS" },
     { title: "✅ Done", payload: "SERVICES_DONE" },
   ]);
 }
@@ -527,6 +527,43 @@ async function handleCheckIn(senderId, date) {
 async function handleCheckOut(senderId, date) {
   const session = getSession(senderId);
   session.booking.checkOut = date;
+  
+  const floorKey = session.booking.accommodation === "ACCOM_FIRST" ? "firstFloor" 
+    : session.booking.accommodation === "ACCOM_SECOND" ? "secondFloor" : null;
+
+  if (floorKey) {
+    await sendText(senderId, `⏳ Checking availability for the ${floorKey === 'firstFloor' ? '1st' : '2nd'} Floor...`);
+    const status = await checkAvailability(floorKey, session.booking.checkIn, session.booking.checkOut);
+    
+    if (!status.available) {
+      setStep(senderId, "ask_checkin");
+      return sendText(senderId, status.reason + "\n\n📅 Please type a different *check-in date*:");
+    }
+    await sendText(senderId, "✅ Great news! Those dates are available.");
+  }
+
+  setStep(senderId, "ask_nights");
+  return sendText(senderId, "🌙 How many nights will you be staying? (Please type a number, e.g., 2)");
+}
+
+async function handleNights(senderId, nightsText) {
+  const session = getSession(senderId);
+  const num = parseInt(nightsText, 10);
+  if (isNaN(num) || num <= 0) {
+    return sendText(senderId, "Please enter a valid number of nights (e.g., 2).");
+  }
+  session.booking.nights = num;
+  setStep(senderId, "ask_pax");
+  return sendText(senderId, "👥 How many guests (pax) will be staying? (Please type a number, e.g., 7)");
+}
+
+async function handlePax(senderId, paxText) {
+  const session = getSession(senderId);
+  const num = parseInt(paxText, 10);
+  if (isNaN(num) || num <= 0) {
+    return sendText(senderId, "Please enter a valid number of guests (e.g., 7).");
+  }
+  session.booking.pax = num;
   setStep(senderId, "ask_name");
   return sendText(senderId, "👤 What's your full name for the booking?");
 }
@@ -555,12 +592,26 @@ async function showSummary(senderId) {
           : null;
 
   if (accomKey && typeKey) {
-    total += PRICES[accomKey].options[typeKey].price;
+    const pkg = PRICES[accomKey].options[typeKey];
+    const nights = b.nights || 1;
+    const pax = b.pax || 1;
+    const minPax = pkg.minPax || 1;
+    
+    if (typeKey === "barkada" || typeKey === "premiumBarkada") {
+      const chargeablePax = Math.max(pax, minPax);
+      total += pkg.price * chargeablePax * nights;
+    } else {
+      const extraPax = pax > minPax ? pax - minPax : 0;
+      total += (pkg.price * nights) + (extraPax * (pkg.extraPaxRate || 0) * nights);
+    }
   }
 
   if (b.services.includes("islandHopping") && b.islandHoppingType) {
     const ihKey = b.islandHoppingType === "IH_ONE" ? "one" : b.islandHoppingType === "IH_DOUBLE" ? "double" : "tri";
-    total += PRICES.islandHopping.options[ihKey].price;
+    const ihPrice = PRICES.islandHopping.options[ihKey].price;
+    const pax = b.pax || 1;
+    const chargeablePax = Math.max(pax, 5);
+    total += ihPrice * chargeablePax;
   }
 
   if (b.services.includes("motorcycle") && b.motorcycleType) {
@@ -573,9 +624,6 @@ async function showSummary(senderId) {
     total += PRICES.landTour.options[ltKey].price;
   }
 
-  if (b.photosVideos) {
-    total += PRICES.addOns.photosVideos.price;
-  }
 
   b.total = total;
 
@@ -588,11 +636,20 @@ async function showSummary(senderId) {
     : "None";
 
   let note = "";
-  if (b.accommodationType === "TYPE_BARKADA" || b.accommodationType === "TYPE_PREMIUM_BARKADA") {
-    note += `*(Note: Accommodation price is per pax base rate. Min pax applies!)*\n`;
+  if (accomKey && typeKey) {
+    const pkg = PRICES[accomKey].options[typeKey];
+    if (b.pax > pkg.minPax) {
+      if (typeKey === "regular" || typeKey === "upgrade") {
+        note += `*(Includes ${b.pax - pkg.minPax} extra pax at ₱${pkg.extraPaxRate}/night)*\n`;
+      }
+    } else if (b.pax < pkg.minPax) {
+       note += `*(Note: Minimum of ${pkg.minPax} pax applied for accommodation)*\n`;
+    }
   }
   if (b.services.includes("islandHopping")) {
-    note += "*(Note: Island Hopping total shown is per head, minimum 5 pax)*\n";
+    if ((b.pax || 1) < 5) {
+      note += "*(Note: Minimum 5 pax applied for Island Hopping)*\n";
+    }
   }
 
   const summary =
@@ -600,9 +657,10 @@ async function showSummary(senderId) {
     `👤 Name:          ${b.name}\n` +
     `📅 Check-in:      ${b.checkIn}\n` +
     `📅 Check-out:     ${b.checkOut}\n` +
+    `🌙 Nights:        ${b.nights}\n` +
+    `👥 Guests (Pax):  ${b.pax}\n` +
     `🛏️ Accommodation: ${accomLabel}\n` +
-    `🏝️ Services:      ${servicesList}\n` +
-    `📸 Photos/Videos: ${b.photosVideos ? "Yes" : "No"}\n\n` +
+    `🏝️ Services:      ${servicesList}\n\n` +
     `💰 *Estimated Total: ₱${total.toLocaleString()}*\n` +
     note + "\n" +
     `GCash: ${PAYMENT.gcashNumber} (${PAYMENT.gcashName})\n\n` +
