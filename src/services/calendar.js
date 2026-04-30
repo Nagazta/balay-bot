@@ -84,13 +84,13 @@ async function checkAvailability(floorKey, checkInStr, checkOutStr) {
   }
 
   try {
-    // We fetch the first sheet in the document with cell formatting included
+    // We fetch the document with cell formatting included
     const response = await sheetsAPI.spreadsheets.get({
       spreadsheetId,
       includeGridData: true,
     });
 
-    const sheet = response.data.sheets[0];
+    const sheet = response.data.sheets.find(s => s.properties.title.toUpperCase().includes('CALENDAR')) || response.data.sheets[0];
     const gridData = sheet.data[0];
     const rowData = gridData.rowData || [];
 
