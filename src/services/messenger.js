@@ -32,8 +32,8 @@ async function sendQuickReplies(recipientId, text, replies) {
   });
 }
 
-// Send a generic card (image + title + buttons)
-async function sendCard(recipientId, title, subtitle, buttons) {
+// Send a carousel of generic cards
+async function sendCarousel(recipientId, elements) {
   await callAPI({
     recipient: { id: recipientId },
     message: {
@@ -41,17 +41,16 @@ async function sendCard(recipientId, title, subtitle, buttons) {
         type: "template",
         payload: {
           template_type: "generic",
-          elements: [
-            {
-              title,
-              subtitle,
-              buttons: buttons.map((b) => ({
-                type: "postback",
-                title: b.title,
-                payload: b.payload,
-              })),
-            },
-          ],
+          elements: elements.map((e) => ({
+            title: e.title,
+            image_url: e.image_url,
+            subtitle: e.subtitle,
+            buttons: e.buttons.map((b) => ({
+              type: "postback",
+              title: b.title,
+              payload: b.payload,
+            })),
+          })),
         },
       },
     },
@@ -84,4 +83,4 @@ async function callAPI(body) {
   }
 }
 
-module.exports = { sendText, sendQuickReplies, sendCard, sendImage };
+module.exports = { sendText, sendQuickReplies, sendCarousel, sendImage };

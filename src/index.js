@@ -48,7 +48,23 @@ app.post("/webhook", async (req, res) => {
 
       try {
         if (event.message) {
-          await handleMessage(senderId, event.message);
+          if (event.message.is_echo) {
+            // A message was sent by the page (staff or bot)
+            // If it lacks an app_id, it was sent by a human staff using Business Suite Inbox.
+            const isHuman = !event.message.app_id || (process.env.APP_ID && event.message.app_id.toString() !== process.env.APP_ID);
+            
+            if (isHuman) {
+              const recipientId = event.recipient?.id;
+              if (recipientId) {
+                console.log("👤 Human staff reply detected! Disabling bot for user:", recipientId);
+                require("./services/session").markHandoff(recipientId);
+                const session = require("./services/session").getSession(recipientId);
+                session.lastHandoffPrompt = Date.now();
+              }
+            }
+          } else {
+            await handleMessage(senderId, event.message);
+          }
         } else if (event.postback) {
           await handlePostback(senderId, event.postback);
         }

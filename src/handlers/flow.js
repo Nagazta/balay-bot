@@ -3,16 +3,42 @@
 // Routes each user step to the right response
 // =============================================
 
-const { sendText, sendQuickReplies, sendImage } = require("../services/messenger");
-const { getSession, resetSession, setStep } = require("../services/session");
+const { sendText, sendQuickReplies, sendImage, sendCarousel } = require("../services/messenger");
+const { getSession, resetSession, setStep, markHandoff, unmarkHandoff } = require("../services/session");
 const { PRICES, PAYMENT } = require("../config/prices");
 
 // ── Entry point for text messages ───────────────
 async function handleMessage(senderId, message) {
   const session = getSession(senderId);
 
-  // If a human agent has taken over, stop the bot
-  if (session.humanHandoff) return;
+  // If a human agent has taken over, handle it gracefully
+  if (session.humanHandoff) {
+    if (message.quick_reply?.payload === "RESUME_BOT") {
+      unmarkHandoff(senderId);
+      resetSession(senderId);
+      return greet(senderId);
+    }
+    if (message.quick_reply?.payload === "STAY_HUMAN") {
+      session.lastHandoffPrompt = Date.now();
+      return;
+    }
+
+    const now = Date.now();
+    // Prompt if they typed something text-based and it's been at least 1 hour since the last prompt/interaction
+    if (!session.lastHandoffPrompt || (now - session.lastHandoffPrompt > 60 * 60 * 1000)) {
+      session.lastHandoffPrompt = now;
+      const userName = session.booking?.name ? session.booking.name : "there";
+      return sendQuickReplies(
+        senderId,
+        `Hi ${userName} again! Would you like to chat with our bot or wait for a human agent?`,
+        [
+          { title: "🤖 Chat with Bot", payload: "RESUME_BOT" },
+          { title: "👤 Wait for Human", payload: "STAY_HUMAN" },
+        ]
+      );
+    }
+    return;
+  }
 
   // Quick reply buttons arrive as messages with a quick_reply payload — route them like postbacks
   if (message.quick_reply?.payload) {
@@ -69,7 +95,8 @@ async function handlePostback(senderId, postback) {
   }
 
   if (payload === "CHAT_HUMAN") {
-    session.humanHandoff = true;
+    markHandoff(senderId);
+    session.lastHandoffPrompt = Date.now();
     setStep(senderId, "humanHandoff");
     return sendText(
       senderId,
@@ -98,7 +125,8 @@ async function handlePostback(senderId, postback) {
   }
 
   if (payload === "FAQ_HUMAN") {
-    session.humanHandoff = true;
+    markHandoff(senderId);
+    session.lastHandoffPrompt = Date.now();
     setStep(senderId, "humanHandoff");
     return sendText(
       senderId,
@@ -116,7 +144,7 @@ async function handlePostback(senderId, postback) {
     return askAccommodationType(senderId, payload);
   }
 
-  if (["TYPE_REGULAR", "TYPE_UPGRADE", "TYPE_BARKADA"].includes(payload)) {
+  if (["TYPE_REGULAR", "TYPE_UPGRADE", "TYPE_BARKADA", "TYPE_PREMIUM_BARKADA"].includes(payload)) {
     session.booking.accommodationType = payload;
     return askServices(senderId);
   }
@@ -240,8 +268,6 @@ async function sendFloor1Photos(senderId) {
     `${BASE}/images/5.jpg`,
     `${BASE}/images/6.jpg`,
     `${BASE}/images/7.jpg`,
-    `${BASE}/images/8.jpg`,
-    `${BASE}/images/9.jpg`,
   ];
 
   await sendText(senderId, "🛏️ *First Floor — Balay Santa Fe*");
@@ -262,6 +288,8 @@ async function sendFloor2Photos(senderId) {
     `${BASE}/images/2.2.jpg`,
     `${BASE}/images/2.3.jpg`,
     `${BASE}/images/2.4.jpg`,
+    `${BASE}/images/2.5.jpg`,
+    `${BASE}/images/2.6.jpg`,
   ];
 
   await sendText(
@@ -305,11 +333,13 @@ async function showPrices(senderId) {
   const msg =
     "💰 *BALAY SANTA FE — RATES*\n\n" +
     "🛏️ First Floor\n" +
-    "  • Regular  — ₱500\n  • Upgrade  — ₱800\n  • Barkada  — ₱1,500\n\n" +
+    "  • Barkada Package — ₱999/pax\n  • Upgrade Package — ₱4,599\n  • Regular Rates — ₱4,199\n  • Premium Barkada — ₱1,299/pax\n\n" +
     "🛏️ Second Floor\n" +
-    "  • Regular  — ₱600\n  • Upgrade  — ₱1,000\n  • Barkada  — ₱1,800\n\n" +
-    "🏝️ Island Hopping\n" +
-    "  • 1 Island  — ₱300\n  • 2 Islands — ₱500\n  • 3 Islands — ₱700\n\n" +
+    "  • Regular Rates — ₱4,599\n  • Upgrade Rates — ₱5,299\n  • Barkada Package — ₱999/pax\n  • Premium Barkada — ₱1,299/pax\n\n" +
+    "🏝️ Island Hopping (Min. 5 Pax)\n" +
+    "  Price per head:\n" +
+    "  • Single Island — ₱480\n  • Two Islands — ₱550\n  • Tri-Island — ₱650\n" +
+    "  *(Incl. boat fee & pickup/drop-off. Entrance/eco fees excluded)*\n\n" +
     "🛵 Motorcycle Rental\n" +
     "  Upgrade:  Honda Click125 / Honda Genio — ₱350\n" +
     "  Regular: Honda Beatstreet / Yamaha Mio i125s — ₱300\n\n" +
@@ -339,11 +369,68 @@ async function askAccommodationType(senderId, accommodation) {
     return askServices(senderId);
   }
   setStep(senderId, "ask_accom_type");
-  return sendQuickReplies(senderId, "Which package type?", [
-    { title: "Regular", payload: "TYPE_REGULAR" },
-    { title: "Upgrade", payload: "TYPE_UPGRADE" },
-    { title: "Barkada Bundle", payload: "TYPE_BARKADA" },
-  ]);
+  const BASE = process.env.BASE_URL || "https://balay-bot.onrender.com";
+
+  let elements = [];
+  if (accommodation === "ACCOM_FIRST") {
+    elements = [
+      {
+        title: "Barkada Package - ₱999/pax",
+        subtitle: "Min 7pax. Bedrm, Land Tour, Wifi, Beach Access, Breakfast in Bilao.",
+        image_url: `${BASE}/images/BarkadaPackage-first.png`,
+        buttons: [{ title: "Select Barkada", payload: "TYPE_BARKADA" }]
+      },
+      {
+        title: "Upgrade Package - ₱4,599",
+        subtitle: "Min 7pax (Extra: ₱599/pax). Bedrm, Land Tour, Wifi, Beach, Breakfast.",
+        image_url: `${BASE}/images/UpgradePackage-first.png`,
+        buttons: [{ title: "Select Upgrade", payload: "TYPE_UPGRADE" }]
+      },
+      {
+        title: "Regular Rates - ₱4,199",
+        subtitle: "Min 7pax (Extra: ₱499/pax). Whole House, Wifi, Beach Access, Kitchen.",
+        image_url: `${BASE}/images/RegularRates-first.png`,
+        buttons: [{ title: "Select Regular", payload: "TYPE_REGULAR" }]
+      },
+      {
+        title: "Premium Barkada - ₱1299/pax",
+        subtitle: "Min 7pax. 3-Bedrm, Land Tour, Wifi, Island Hopping, Breakfast.",
+        image_url: `${BASE}/images/PremiumBarkada-first.png`,
+        buttons: [{ title: "Select Premium", payload: "TYPE_PREMIUM_BARKADA" }]
+      }
+    ];
+  } else {
+    // ACCOM_SECOND
+    elements = [
+      {
+        title: "Barkada Package - ₱999/pax",
+        subtitle: "Min 8pax. 3-Bedrm, Land Tour, Wifi, Beach Access, Breakfast in Bilao.",
+        image_url: `${BASE}/images/BarkadaPackage-Second.png`,
+        buttons: [{ title: "Select Barkada", payload: "TYPE_BARKADA" }]
+      },
+      {
+        title: "Upgrade Rates - ₱5,299",
+        subtitle: "Min 8pax (Extra: ₱599/pax). Whole House, Wifi, Beach, Breakfast.",
+        image_url: `${BASE}/images/UpgradeRates - Second.png`,
+        buttons: [{ title: "Select Upgrade", payload: "TYPE_UPGRADE" }]
+      },
+      {
+        title: "Regular Rates - ₱4,599",
+        subtitle: "Min 8pax (Extra: ₱499/pax). Whole House, Wifi, Beach Access, Kitchen.",
+        image_url: `${BASE}/images/RegularRates-Second.png`,
+        buttons: [{ title: "Select Regular", payload: "TYPE_REGULAR" }]
+      },
+      {
+        title: "Premium Barkada - ₱1299/pax",
+        subtitle: "Min 8pax. 3-Bedrm, Land Tour, Wifi, Island Hopping, Breakfast.",
+        image_url: `${BASE}/images/PremiumBarkada-Second.png`,
+        buttons: [{ title: "Select Premium", payload: "TYPE_PREMIUM_BARKADA" }]
+      }
+    ];
+  }
+
+  await sendText(senderId, "Here are our packages! Swipe left to see more options:");
+  return sendCarousel(senderId, elements);
 }
 
 async function askServices(senderId) {
@@ -379,10 +466,23 @@ async function askMoreServices(senderId) {
 
 async function askIslandHopping(senderId) {
   setStep(senderId, "ask_island");
-  return sendQuickReplies(senderId, "🏝️ Which island hopping package?", [
-    { title: "1 Island  — ₱300", payload: "IH_ONE" },
-    { title: "2 Islands — ₱500", payload: "IH_DOUBLE" },
-    { title: "3 Islands — ₱700", payload: "IH_TRI" },
+  await sendText(
+    senderId,
+    "🏝️ *Island Hopping Rates*\n\n" +
+    "📌 *Minimum of 5 Pax*\n" +
+    "Price per head:\n" +
+    "  • Single Island — ₱480\n" +
+    "  • Two Islands — ₱550\n" +
+    "  • Tri-Island — ₱650\n\n" +
+    "✅ *Inclusions:*\n" +
+    "  • Boat Fee\n" +
+    "  • Drop-off & Pick-up ride from Sta Fe to the starting area\n\n" +
+    "⚠️ *Note:* Entrances and ecological fees are excluded."
+  );
+  return sendQuickReplies(senderId, "Which package?", [
+    { title: "Single — ₱480", payload: "IH_ONE" },
+    { title: "Double — ₱550", payload: "IH_DOUBLE" },
+    { title: "Tri-Island — ₱650", payload: "IH_TRI" },
   ]);
 }
 
@@ -451,7 +551,8 @@ async function showSummary(senderId) {
   const typeKey = b.accommodationType === "TYPE_REGULAR" ? "regular"
     : b.accommodationType === "TYPE_UPGRADE" ? "upgrade"
       : b.accommodationType === "TYPE_BARKADA" ? "barkada"
-        : null;
+        : b.accommodationType === "TYPE_PREMIUM_BARKADA" ? "premiumBarkada"
+          : null;
 
   if (accomKey && typeKey) {
     total += PRICES[accomKey].options[typeKey].price;
@@ -486,6 +587,14 @@ async function showSummary(senderId) {
     ? b.services.map((s) => labelMap[s] ?? s).join(", ")
     : "None";
 
+  let note = "";
+  if (b.accommodationType === "TYPE_BARKADA" || b.accommodationType === "TYPE_PREMIUM_BARKADA") {
+    note += `*(Note: Accommodation price is per pax base rate. Min pax applies!)*\n`;
+  }
+  if (b.services.includes("islandHopping")) {
+    note += "*(Note: Island Hopping total shown is per head, minimum 5 pax)*\n";
+  }
+
   const summary =
     "📋 *BOOKING SUMMARY*\n\n" +
     `👤 Name:          ${b.name}\n` +
@@ -494,7 +603,8 @@ async function showSummary(senderId) {
     `🛏️ Accommodation: ${accomLabel}\n` +
     `🏝️ Services:      ${servicesList}\n` +
     `📸 Photos/Videos: ${b.photosVideos ? "Yes" : "No"}\n\n` +
-    `💰 *Estimated Total: ₱${total.toLocaleString()}*\n\n` +
+    `💰 *Estimated Total: ₱${total.toLocaleString()}*\n` +
+    note + "\n" +
     `GCash: ${PAYMENT.gcashNumber} (${PAYMENT.gcashName})\n\n` +
     "Confirm your booking?";
 

@@ -7,51 +7,50 @@ const PRICES = {
   firstFloor: {
     label: "First Floor",
     options: {
-      regular:       { label: "Regular",       price: 500 },
-      upgrade:       { label: "Upgrade",        price: 800 },
-      barkada:       { label: "Barkada Bundle", price: 1500 },
+      regular: { label: "Regular Rates", price: 4199 },
+      upgrade: { label: "Upgrade Package", price: 4599 },
+      barkada: { label: "Barkada Package", price: 999 },
+      premiumBarkada: { label: "Premium Barkada", price: 1299 },
     }
   },
   secondFloor: {
     label: "Second Floor",
     options: {
-      regular:       { label: "Regular",       price: 600 },
-      upgrade:       { label: "Upgrade",        price: 1000 },
-      barkada:       { label: "Barkada Bundle", price: 1800 },
+      regular: { label: "Regular Rates", price: 4599 },
+      upgrade: { label: "Upgrade Rates", price: 5299 },
+      barkada: { label: "Barkada Package", price: 999 },
+      premiumBarkada: { label: "Premium Barkada", price: 1299 },
     }
   },
   islandHopping: {
     label: "Island Hopping",
     options: {
-      one:    { label: "One Island",   price: 300 },
-      double: { label: "Double Island", price: 500 },
-      tri:    { label: "Tri-Island",   price: 700 },
+      one: { label: "Single Island (per head)", price: 480 },
+      double: { label: "Two Islands (per head)", price: 550 },
+      tri: { label: "Tri-Island (per head)", price: 650 },
     }
   },
   motorcycle: {
     label: "Motorcycle Rental",
     options: {
       regular: { label: "Regular (Beatstreet / Mio i125s)", price: 300 },
-      upgrade: { label: "Upgrade (Click125 / Genio)",      price: 350 },
+      upgrade: { label: "Upgrade (Click125 / Genio)", price: 350 },
     }
   },
   landTour: {
     label: "Land Tour",
     options: {
-      santafe:   { label: "Santa Fe Only",         price: 400 },
-      bantayan:  { label: "Santa Fe + Bantayan",   price: 600 },
+      santafe: { label: "Santa Fe Only", price: 400 },
+      bantayan: { label: "Santa Fe + Bantayan", price: 600 },
     }
   },
-  addOns: {
-    photosVideos: { label: "Photos & Videos", price: 200 },
-  }
 };
 
 // GCash payment details
 const PAYMENT = {
   gcashNumber: "09XX-XXX-XXXX",   // Replace with actual GCash number
-  gcashName:   "Balay Santa Fe",
-  qrImageUrl:  null,               // Replace with actual QR image URL later
+  gcashName: "Balay Santa Fe",
+  qrImageUrl: null,               // Replace with actual QR image URL later
 };
 
 module.exports = { PRICES, PAYMENT };
