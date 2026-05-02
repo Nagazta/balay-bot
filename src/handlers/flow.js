@@ -418,10 +418,10 @@ async function askAccommodationType(senderId, accommodation) {
     // ACCOM_SECOND
     elements = [
       {
-        title: "Barkada Package - ₱999/pax",
-        subtitle: "Min 8pax. 3-Bedrm, Land Tour, Wifi, Beach Access, Breakfast in Bilao.",
-        image_url: `${BASE}/images/BarkadaPackage-Second.png`,
-        buttons: [{ title: "Select Barkada", payload: "TYPE_BARKADA" }]
+        title: "Regular Rates - ₱4,599",
+        subtitle: "Min 8pax (Extra: ₱499/pax). Whole House, Wifi, Beach Access, Kitchen.",
+        image_url: `${BASE}/images/RegularRates-Second.png`,
+        buttons: [{ title: "Select Regular", payload: "TYPE_REGULAR" }]
       },
       {
         title: "Upgrade Rates - ₱5,299",
@@ -430,10 +430,10 @@ async function askAccommodationType(senderId, accommodation) {
         buttons: [{ title: "Select Upgrade", payload: "TYPE_UPGRADE" }]
       },
       {
-        title: "Regular Rates - ₱4,599",
-        subtitle: "Min 8pax (Extra: ₱499/pax). Whole House, Wifi, Beach Access, Kitchen.",
-        image_url: `${BASE}/images/RegularRates-Second.png`,
-        buttons: [{ title: "Select Regular", payload: "TYPE_REGULAR" }]
+        title: "Barkada Package - ₱999/pax",
+        subtitle: "Min 8pax. 3-Bedrm, Land Tour, Wifi, Beach Access, Breakfast in Bilao.",
+        image_url: `${BASE}/images/BarkadaPackage-Second.png`,
+        buttons: [{ title: "Select Barkada", payload: "TYPE_BARKADA" }]
       },
       {
         title: "Premium Barkada - ₱1299/pax",
