@@ -85,6 +85,9 @@ async function handleMessage(senderId, message) {
     case "ask_moto_date":
       return handleMotorcycleDate(senderId, message.text?.trim());
 
+    case "ask_lt_pax":
+      return handleLandTourPax(senderId, message.text?.trim());
+
     default:
       return sendText(
         senderId,
@@ -202,7 +205,7 @@ async function handlePostback(senderId, postback) {
     if (!session.booking.services.includes("landTour")) {
       session.booking.services.push("landTour");
     }
-    return askMoreServices(senderId);
+    return askLandTourPax(senderId);
   }
 
 
@@ -359,7 +362,8 @@ async function showPrices(senderId) {
     "🛵 Motorcycle Rental\n" +
     "  Upgrade:  Honda Click125 / Honda Genio — ₱350\n" +
     "  Regular: Honda Beatstreet / Yamaha Mio i125s — ₱300\n\n" +
-    "🗺️ Land Tour\n" +
+    "🗺️ Land Tour (Min. 6 Pax)\n" +
+    "  Price per head:\n" +
     "  • Santa Fe Only         — ₱400\n  • Santa Fe + Bantayan — ₱600\n\n" +
     "Ready to book?";
 
@@ -585,10 +589,26 @@ async function askMotorcycle(senderId) {
 
 async function askLandTour(senderId) {
   setStep(senderId, "ask_landtour");
-  return sendQuickReplies(senderId, "🗺️ Which land tour package?", [
+  await sendText(senderId, "🗺️ *Land Tour Packages*\n\n📌 *Note: Minimum of 6 pax for Land Tours.*");
+  return sendQuickReplies(senderId, "Which land tour package would you like?", [
     { title: "Santa Fe Only — ₱400", payload: "LT_SANTAFE" },
     { title: "Santa Fe + Bantayan — ₱600", payload: "LT_BANTAYAN" },
   ]);
+}
+
+async function askLandTourPax(senderId) {
+  setStep(senderId, "ask_lt_pax");
+  return sendText(senderId, "👥 How many people will join the Land Tour?");
+}
+
+async function handleLandTourPax(senderId, text) {
+  const session = getSession(senderId);
+  const num = parseInt(text, 10);
+  if (isNaN(num) || num <= 0) {
+    return sendText(senderId, "Please enter a valid number of people.");
+  }
+  session.booking.landTourPax = num;
+  return askMoreServices(senderId);
 }
 
 async function askCheckIn(senderId) {
@@ -721,9 +741,12 @@ async function showSummary(senderId) {
   if (b.services.includes("landTour") && b.landTourType) {
     const ltKey = b.landTourType === "LT_SANTAFE" ? "santafe" : "bantayan";
     const ltPkg = PRICES.landTour.options[ltKey];
-    const ltSubtotal = ltPkg.price;
+    const ltPrice = ltPkg.price;
+    const ltPax = b.landTourPax || 1;
+    const chargeableLtPax = Math.max(ltPax, 6); // Min 6 pax
+    const ltSubtotal = ltPrice * chargeableLtPax;
     total += ltSubtotal;
-    breakdown += `• ${ltPkg.label} Tour: ₱${ltSubtotal.toLocaleString()}\n`;
+    breakdown += `• Land Tour (${ltPkg.label} x ${chargeableLtPax} pax): ₱${ltSubtotal.toLocaleString()}\n`;
   }
 
   b.total = total;
